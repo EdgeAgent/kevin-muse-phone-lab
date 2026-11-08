@@ -1,4 +1,4 @@
-# Kevin + Ollama local agent
+# PhoneOps — by EDGE | AGENCY: local agent setup
 
 Kevin connects to the Ollama Desktop app through its local HTTP API at `http://localhost:11434`. Ollama must be installed and running on the same computer as Kevin. The default model is `llama3.2`; change it with `OLLAMA_MODEL`.
 
@@ -10,7 +10,7 @@ $env:OLLAMA_MODEL = "llama3.2"
 .\run-kevin-windows.bat
 ```
 
-The dashboard’s **Ask Kevin** box sends your instruction to the local model. The model can only choose from Kevin’s eight phone IDs and the safe preset task list. Kevin validates the returned JSON before dispatching it to a worker. The agent does not send messages, access accounts, or control real devices.
+The dashboard’s **Ask Kevin** box sends your instruction to the local model. The model can only choose from PhoneOps’ eight phone IDs and the safe preset task list. Kevin validates the returned JSON before dispatching it to a worker. The agent does not send messages, access accounts, or control real devices.
 
 To build native Windows executables, run PowerShell as a normal user from this folder:
 

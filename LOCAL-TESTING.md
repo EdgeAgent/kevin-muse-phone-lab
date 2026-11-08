@@ -22,7 +22,7 @@ With Kevin running, execute:
 python .\test_kevin.py
 ```
 
-A successful run prints that eight workers are online, dispatches a health scan to `kevin-01`, confirms the worker completed it, and reports Ollama connectivity.
+A successful run prints that eight workers are online, dispatches a health scan to `kevin-01`, runs a second health scan across all eight workers in parallel, confirms completion, and reports Ollama connectivity.
 
 ## 3. Configure local Ollama models
 
@@ -73,6 +73,12 @@ Inside each directory, `phone-state.json` records the worker identity and `last-
 
 ```powershell
 $state.phones | ForEach-Object { "[$($_.id)]"; $_.events }
+```
+
+To dispatch a workflow to every ready worker from PowerShell:
+
+```powershell
+Invoke-RestMethod http://localhost:8787/api/parallel/dispatch -Method Post -ContentType 'application/json' -Body '{"preset":"health-scan"}' | ConvertTo-Json -Depth 6
 ```
 
 For a live process view:

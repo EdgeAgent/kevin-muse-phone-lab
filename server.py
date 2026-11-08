@@ -4,6 +4,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse
 import argparse, json, os, subprocess, threading, time, uuid, sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 
@@ -36,7 +37,7 @@ lock = threading.Lock()
 
 def public_state():
     with lock:
-        return {"fleet": "Kevin", "phones": list(phones.values()), "presets": {k: {"label": v[0], "description": v[1]} for k, v in TASK_PRESETS.items()}}
+        return {"fleet": "PhoneOps", "phones": list(phones.values()), "presets": {k: {"label": v[0], "description": v[1]} for k, v in TASK_PRESETS.items()}}
 
 def add_event(phone, event):
     phone["events"].insert(0, event); phone["events"] = phone["events"][:8]; phone["updated"] = now()
@@ -114,7 +115,7 @@ def agent_dispatch(instruction):
     snapshot = public_state()
     phone_lines = "\n".join(f"{p['id']} ({p['name']}): status={p['status']}, app={p['app']}, battery={p['battery']}%" for p in snapshot["phones"])
     presets = "\n".join(f"{key}: {value[0]} — {value[1]}" for key, value in TASK_PRESETS.items())
-    system = "You are Kevin, a local fleet operator. Plan exactly one safe task for exactly one virtual phone. Never invent a phone id or preset. Return JSON only with keys phone_id, preset, reason. Use a preset when possible. If the user asks for a task not represented by a preset, use preset custom and put the exact task in reason. Do not claim to have sent messages, accessed accounts, or changed real devices: this is a local simulator."
+    system = "You are PhoneOps, a local phone fleet operator. Plan exactly one safe task for exactly one virtual phone. Never invent a phone id or preset. Return JSON only with keys phone_id, preset, reason. Use a preset when possible. If the user asks for a task not represented by a preset, use preset custom and put the exact task in reason. Do not claim to have sent messages, accessed accounts, or changed real devices: this is a local simulator."
     user = f"Instruction: {instruction}\n\nAvailable phones:\n{phone_lines}\n\nAvailable presets:\n{presets}"
     payload = {"model": OLLAMA_MODEL, "stream": False, "format": {"type": "object", "properties": {"phone_id": {"type": "string"}, "preset": {"type": "string"}, "reason": {"type": "string"}}, "required": ["phone_id", "preset", "reason"]}, "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}]}
     result = ollama_request("/api/chat", payload)
@@ -128,6 +129,21 @@ def agent_dispatch(instruction):
     else:
         task = None
     return {"plan": plan, "dispatch": dispatch(phone_id, {"preset": preset, "task": task}), "model": OLLAMA_MODEL}
+
+def parallel_dispatch(payload):
+    phone_ids = payload.get("phone_ids") or list(phones.keys())
+    preset = payload.get("preset")
+    task = (payload.get("task") or "").strip()
+    if not isinstance(phone_ids, list) or not phone_ids: raise ValueError("phone_ids must contain at least one phone")
+    if not preset and not task: raise ValueError("preset or task is required")
+    results = []
+    with ThreadPoolExecutor(max_workers=min(8, len(phone_ids))) as pool:
+        futures = {pool.submit(dispatch, phone_id, {"preset": preset, "task": task}): phone_id for phone_id in phone_ids}
+        for future in as_completed(futures):
+            phone_id = futures[future]
+            try: results.append({"ok": True, **future.result()})
+            except Exception as exc: results.append({"ok": False, "phoneId": phone_id, "error": str(exc)})
+    return {"requested": len(phone_ids), "dispatched": sum(1 for r in results if r["ok"]), "results": sorted(results, key=lambda r: r.get("phoneId", ""))}
 
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *_): pass
@@ -158,6 +174,8 @@ class Handler(BaseHTTPRequestHandler):
                 instruction = str(payload.get("instruction", "")).strip()
                 if not instruction: raise ValueError("instruction is required")
                 return self.send_json(200, {"ok": True, "agent": agent_dispatch(instruction)})
+            if path == "/api/parallel/dispatch":
+                return self.send_json(200, {"ok": True, "parallel": parallel_dispatch(payload)})
         except (ValueError, KeyError, json.JSONDecodeError, URLError, HTTPError, TimeoutError, OSError) as exc: return self.send_json(400,{"ok":False,"error":str(exc)})
         self.send_json(404,{"error":"not found"})
 

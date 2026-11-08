@@ -1,4 +1,4 @@
-# Kevin’s Muse Phone Lab
+# PhoneOps — by EDGE | AGENCY
 
 ## Product shape
 A local web dashboard that hosts eight independently taskable virtual phone worker processes under the fleet name **Kevin**. It is intentionally a lightweight emulator rather than a full Android/iOS emulator: the upstream Muse Gadget SDK targets Linux/ESP32 gadgets and exposes commands such as `system.run`, `file.read`, `file.write`, and `device.health`. Each phone has its own OS process, working directory, state directory, stdin task queue, PID, and result files.
