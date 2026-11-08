@@ -1,0 +1,20 @@
+let state=null, selectedId='kevin-01';
+const $=s=>document.querySelector(s);
+async function load(){state=await fetch('/api/state').then(r=>r.json());render();}
+async function checkOllama(){try{const s=await fetch('/api/ollama/status').then(r=>r.json());$('#ollamaModel').textContent=s.model||'not configured';$('#ollamaState').textContent=s.connected?'connected':'offline';$('#ollamaState').style.color=s.connected?'var(--mint)':'var(--coral)';$('#agentStatus').textContent=s.connected?`Connected to ${s.model}.`:'Ollama is not reachable at localhost:11434.'}catch(e){$('#agentStatus').textContent='Could not check Ollama.'}}
+function selected(){return state.phones.find(p=>p.id===selectedId)||state.phones[0]}
+function render(){const p=selected(); const working=state.phones.filter(x=>x.status==='working').length;
+ $('#readyCount').textContent=`${state.phones.length-working} ready`; $('#workingNumber').textContent=working; $('#workingMeter').style.width=`${working/state.phones.length*100}%`;
+ $('#phoneList').innerHTML=state.phones.map(x=>`<div class="phone-item ${x.id===selectedId?'selected':''}" data-id="${x.id}"><div class="phone-icon">${String(x.slot).padStart(2,'0')}</div><div class="phone-copy"><div class="phone-name">${x.name}</div><div class="phone-id">${x.id}</div></div><div class="phone-state ${x.status}">${x.status}</div></div>`).join('');
+ document.querySelectorAll('.phone-item').forEach(el=>el.onclick=()=>{selectedId=el.dataset.id;render()});
+ $('#selectedTitle').innerHTML=`${p.name} <span class="status-chip ${p.status}">${p.status.toUpperCase()}</span>`; $('#selectedSubtitle').textContent=`${p.id} · ${p.network} · battery ${p.battery}% · worker PID ${p.workerPid||'—'}`; $('#miniApp').textContent=p.app;
+ $('#startPhone').disabled=p.power==='on'; $('#stopPhone').disabled=p.power==='off';
+ $('#events').innerHTML=p.events.map(e=>`<div class="event"><span class="event-time">${e.time}</span><span class="event-mark ${e.kind==='dispatch'?'dispatch':''}"></span><div class="event-text">${e.text}${e.command?`<span class="event-code">${e.taskId} · ${e.command}</span>`:''}</div></div>`).join('');
+ $('#presetGrid').innerHTML=Object.entries(state.presets).slice(0,5).map(([key,v])=>`<button class="preset" data-task="${key}" ${p.status==='working'||p.power==='off'?'disabled':''}><strong>${v.label}</strong><span>${v.description}</span></button>`).join(''); document.querySelectorAll('.preset').forEach(b=>b.onclick=()=>dispatch({preset:b.dataset.task}));
+}
+async function dispatch(payload){const p=selected(); if(p.status==='working'||p.power==='off')return; const r=await fetch(`/api/phones/${p.id}/tasks`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}); const data=await r.json(); if(!data.ok) alert(data.error); await load()}
+async function askKevin(){const input=$('#agentInstruction'), instruction=input.value.trim();if(!instruction)return;$('#askAgent').disabled=true;$('#agentStatus').textContent='Kevin is planning…';try{const r=await fetch('/api/agent/dispatch',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({instruction})});const data=await r.json();if(!data.ok)throw new Error(data.error);const a=data.agent;selectedId=a.dispatch.phoneId;$('#agentStatus').textContent=`Dispatched ${a.dispatch.label} to ${a.plan.phone_id}.`;input.value='';await load()}catch(e){$('#agentStatus').textContent=`Agent error: ${e.message}`}finally{$('#askAgent').disabled=false}}
+$('#dispatchCustom').onclick=()=>{const value=$('#customTask').value.trim();if(value)dispatch({task:value})};$('#customTask').addEventListener('keydown',e=>{if(e.key==='Enter')$('#dispatchCustom').click()});
+async function power(action){await fetch(`/api/phones/${selectedId}/power`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action})});await load()}
+$('#startPhone').onclick=()=>power('start'); $('#stopPhone').onclick=()=>power('stop'); $('#askAgent').onclick=askKevin; $('#agentInstruction').addEventListener('keydown',e=>{if(e.key==='Enter')askKevin()});
+load();checkOllama();setInterval(load,2000);setInterval(checkOllama,10000);
