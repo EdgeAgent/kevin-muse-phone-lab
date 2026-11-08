@@ -54,7 +54,7 @@ Set-ExecutionPolicy -Scope Process Bypass
 .\run-kevin-windows.bat
 ```
 
-Open `http://localhost:8787`. Use **Ask Kevin** for natural-language control or **Run in parallel** to dispatch one approved workflow to all ready phones.
+Open `http://localhost:8787`. Use **Ask PhoneOps** for natural-language control, **Run in parallel** to dispatch one approved workflow to all ready phones, or **Remote Phone Link** to pair a real phone-side companion. See [REMOTE-LINK.md](REMOTE-LINK.md) for the screen-mirroring architecture and security boundary.
 
 ## Configure local models
 

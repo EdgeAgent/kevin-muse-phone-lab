@@ -21,6 +21,7 @@ TASK_PRESETS = {
 }
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
+REMOTE_PUBLIC_URL = os.environ.get("REMOTE_PUBLIC_URL", "http://localhost:8787")
 
 def now(): return time.strftime("%H:%M:%S")
 
@@ -33,6 +34,7 @@ def make_phone(index):
 
 phones = {p["id"]: p for p in [make_phone(i) for i in range(8)]}
 workers = {}
+remote_links = {}
 lock = threading.Lock()
 
 def public_state():
@@ -145,6 +147,21 @@ def parallel_dispatch(payload):
             except Exception as exc: results.append({"ok": False, "phoneId": phone_id, "error": str(exc)})
     return {"requested": len(phone_ids), "dispatched": sum(1 for r in results if r["ok"]), "results": sorted(results, key=lambda r: r.get("phoneId", ""))}
 
+def create_remote_link(phone_id):
+    with lock:
+        if phone_id not in phones: raise ValueError("Unknown phone")
+        token = uuid.uuid4().hex
+        remote_links[token] = {"phoneId": phone_id, "createdAt": time.time(), "expiresAt": time.time() + 900, "connected": False, "deviceName": None}
+        add_event(phones[phone_id], {"time": now(), "kind": "system", "text": "Remote pairing link created (expires in 15 min)"})
+        return {"phoneId": phone_id, "token": token, "url": f"{REMOTE_PUBLIC_URL.rstrip('/')}/remote/{token}", "expiresInSeconds": 900}
+
+def remote_status():
+    with lock:
+        cutoff = time.time()
+        for token in list(remote_links):
+            if remote_links[token]["expiresAt"] < cutoff: del remote_links[token]
+        return [{"token": token, **link} for token, link in remote_links.items()]
+
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, *_): pass
     def send_json(self, code, data):
@@ -153,6 +170,12 @@ class Handler(BaseHTTPRequestHandler):
         path=urlparse(self.path).path
         if path=="/api/state": return self.send_json(200, public_state())
         if path=="/api/ollama/status": return self.send_json(200, ollama_status())
+        if path=="/api/remote/status": return self.send_json(200, {"ok": True, "links": remote_status()})
+        if path.startswith("/remote/"):
+            token = path.split("/", 2)[2]
+            with lock: link = remote_links.get(token)
+            if not link or link["expiresAt"] < time.time(): return self.send_json(404, {"ok": False, "error": "Pairing link is invalid or expired"})
+            return self.send_json(200, {"ok": True, "message": "PhoneOps pairing link is ready for a trusted phone-side companion.", "phoneId": link["phoneId"], "expiresAt": link["expiresAt"], "next": "POST /api/remote/connect with token and device_name"})
         if path=="/manus-routes.json": return self.send_json(200,{"routes":[{"path":"/","title":"Kevin’s Muse Phone Lab"}]})
         target=ROOT/"public"/("index.html" if path=="/" else path.lstrip("/"))
         if target.is_file():
@@ -176,6 +199,19 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json(200, {"ok": True, "agent": agent_dispatch(instruction)})
             if path == "/api/parallel/dispatch":
                 return self.send_json(200, {"ok": True, "parallel": parallel_dispatch(payload)})
+            if path == "/api/remote/link":
+                return self.send_json(200, {"ok": True, "link": create_remote_link(str(payload.get("phone_id", "")))})
+            if path == "/api/remote/connect":
+                token = str(payload.get("token", ""))
+                with lock:
+                    link = remote_links.get(token)
+                    if not link or link["expiresAt"] < time.time(): raise ValueError("Pairing link is invalid or expired")
+                    link["connected"] = True; link["deviceName"] = str(payload.get("device_name", "Remote phone"))[:80]
+                    phones[link["phoneId"]]["power"] = "linked"; phones[link["phoneId"]]["status"] = "linked"
+                    add_event(phones[link["phoneId"]], {"time": now(), "kind": "system", "text": f"Remote phone linked: {link['deviceName']}"})
+                return self.send_json(200, {"ok": True, "phoneId": link["phoneId"]})
+            if path == "/api/remote/status":
+                return self.send_json(200, {"ok": True, "links": remote_status()})
         except (ValueError, KeyError, json.JSONDecodeError, URLError, HTTPError, TimeoutError, OSError) as exc: return self.send_json(400,{"ok":False,"error":str(exc)})
         self.send_json(404,{"error":"not found"})
 
