@@ -28,7 +28,9 @@ PhoneOps is a local operations console for running, observing, and coordinating 
 
 PhoneOps is built for teams that need repeatable phone workflows without immediately handing sensitive operational data to a cloud agent. When Android SDK tools are unavailable, PhoneOps runs lightweight local workers as a safe fallback. When Android Studio Emulator and ADB are installed, the new backend can manage real Android Virtual Devices, install APKs, run scoped shell commands, and capture device screens. See [ANDROID-EMULATOR.md](ANDROID-EMULATOR.md).
 
-![PhoneOps dashboard](https://private-us-east-1.manuscdn.com/sessionFile/ttK12SZFUVQjK3eSjXVUJ1/sandbox/GMfvEamBg2S2NHo3jw1HDW-images_1794142199686_na1fn_L2hvbWUvdWJ1bnR1L2tldmluLW11c2UtcGhvbmUtbGFiL2RvY3Mvc2NyZWVuc2hvdHMvcGhvbmVvcHMtZGFzaGJvYXJk.webp?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvdHRLMTJTWkZVVlFqSzNlU2pYVlVKMS9zYW5kYm94L0dNZnZFYW1CZzJTMk5IbzNqdzFIRFctaW1hZ2VzXzE3OTQxNDIxOTk2ODZfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwydGxkbWx1TFcxMWMyVXRjR2h2Ym1VdGJHRmlMMlJ2WTNNdmMyTnlaV1Z1YzJodmRITXZjR2h2Ym1WdmNITXRaR0Z6YUdKdllYSmsud2VicCIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc5NjA4MzIwMH19fV19&Key-Pair-Id=K2QY5QTL8JSY6C&Signature=MEUCIQDlR~d00gT6h1IkP-VnhVYPeSE0bM00Vc7BHRu~CrAznwIgFpRJ9rXci6Q1zANqRO4OTrEkY91cW1mlsu~LqllUrBw_)
+![PhoneOps phone wall](docs/screenshots/phoneops-phone-wall.webp)
+
+*Eight named phone environments shown side by side, with a direct command chat below the wall.*
 
 ## Product snapshot
 
