@@ -24,7 +24,7 @@
 
 Download or clone this repository and double-click [`Install-PhoneOps.bat`](Install-PhoneOps.bat). It checks prerequisites, optionally offers Android Studio installation, builds the local executables when needed, creates a **PhoneOps** desktop shortcut, and opens the dashboard. See [`ONE-CLICK-SETUP.md`](ONE-CLICK-SETUP.md) for the exact flow. Android SDK licenses are accepted explicitly by the user inside Android Studio; PhoneOps never bypasses that step.
 
-PhoneOps is a local operations console for running, observing, and coordinating multiple phone-oriented agent environments. It combines eight independently taskable worker lanes, a local Ollama agent, parallel workflow dispatch, execution telemetry, and an optional real Android Emulator / ADB backend.
+PhoneOps is a local operations console for running, observing, and coordinating multiple phone-oriented agent environments. Its dashboard presents eight named phone environments side by side — Phone One / Atlas through Phone Eight / Halo — with individual phone screens, worker state, app state, battery, PID, and task status. A direct command chat at the bottom lets an operator address a specific phone by number or name while a separate local agent can choose a phone automatically.
 
 PhoneOps is built for teams that need repeatable phone workflows without immediately handing sensitive operational data to a cloud agent. When Android SDK tools are unavailable, PhoneOps runs lightweight local workers as a safe fallback. When Android Studio Emulator and ADB are installed, the new backend can manage real Android Virtual Devices, install APKs, run scoped shell commands, and capture device screens. See [ANDROID-EMULATOR.md](ANDROID-EMULATOR.md).
 
