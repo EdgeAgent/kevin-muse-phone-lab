@@ -13,6 +13,17 @@ ROOT = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 SOURCE_ROOT = Path(__file__).parent
 RUNTIME = ROOT / ".kevin-runtime"
 PHONE_NAMES = ["Atlas", "Beacon", "Cedar", "Delta", "Echo", "Fable", "Grove", "Halo"]
+DEFAULT_APPS = [
+    {"name":"Chrome","package":"com.android.chrome","kind":"browser"},
+    {"name":"Phone","package":"com.google.android.dialer","kind":"system"},
+    {"name":"Messages","package":"com.google.android.apps.messaging","kind":"messaging"},
+    {"name":"Contacts","package":"com.google.android.contacts","kind":"contacts"},
+    {"name":"Calendar","package":"com.google.android.calendar","kind":"calendar"},
+    {"name":"Camera","package":"com.google.android.GoogleCamera","kind":"camera"},
+    {"name":"Files","package":"com.google.android.documentsui","kind":"files"},
+    {"name":"Settings","package":"com.android.settings","kind":"system"},
+    {"name":"Play Store","package":"com.android.vending","kind":"store"},
+]
 TASK_PRESETS = {
     "check-inbox": ("Check inbox", "Review unread messages and summarize anything urgent.", 3.4, "system.run"),
     "capture-screen": ("Capture screen", "Capture the current screen and attach it to the activity log.", 2.3, "file.write"),
@@ -29,7 +40,7 @@ def now(): return time.strftime("%H:%M:%S")
 def make_phone(index):
     return {"id": f"kevin-{index+1:02d}", "name": PHONE_NAMES[index], "slot": index + 1,
             "status": "ready", "power": "on", "battery": 92 - index * 4, "signal": 4 - (index % 2),
-            "network": "Wi-Fi 6", "app": "Home", "lastTask": "No task dispatched", "updated": now(),
+            "network": "Wi-Fi 6", "app": "Chrome", "apps": [dict(app, installed=True, source="starter-pack") for app in DEFAULT_APPS], "lastTask": "No task dispatched", "updated": now(),
             "workerPid": None, "stateDir": str(RUNTIME / f"kevin-{index+1:02d}"),
             "events": [{"time": now(), "kind": "system", "text": "Virtual device waiting to spawn"}]}
 

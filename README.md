@@ -28,9 +28,11 @@ PhoneOps is a local operations console for running, observing, and coordinating 
 
 PhoneOps is built for teams that need repeatable phone workflows without immediately handing sensitive operational data to a cloud agent. When Android SDK tools are unavailable, PhoneOps runs lightweight local workers as a safe fallback. When Android Studio Emulator and ADB are installed, the new backend can manage real Android Virtual Devices, install APKs, run scoped shell commands, and capture device screens. See [ANDROID-EMULATOR.md](ANDROID-EMULATOR.md).
 
-![PhoneOps phone wall](docs/screenshots/phoneops-phone-wall.webp)
+Every PhoneOps environment starts with a visible starter app pack: **Chrome, Phone, Messages, Contacts, Calendar, Camera, Files, Settings, and Play Store**. In fallback mode these are the environment’s seeded app catalog. In real Android mode, use a Google Play AVD image for actual Play Store and Chrome availability; PhoneOps does not redistribute Google APKs or bypass app licensing.
 
-*Eight named phone environments shown side by side, with a direct command chat below the wall.*
+![PhoneOps phone wall](docs/screenshots/phoneops-phone-wall-app-pack.webp)
+
+*Eight named phone environments shown side by side with Chrome, Phone, Messages, Contacts, Calendar, Camera, Files, Settings, and Play Store in the starter app pack.*
 
 ## Product snapshot
 

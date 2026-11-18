@@ -6,6 +6,8 @@ PhoneOps now includes an optional Android Emulator / ADB backend. This is the pa
 
 Each Android slot is backed by an Android Virtual Device (AVD), not a Python process pretending to be a phone. The Android Emulator preserves app and user-data state in the AVD data partition. PhoneOps can discover AVDs, launch or stop them, list ADB devices, install APKs, run a restricted shell command, and capture a PNG screen image.
 
+PhoneOps presents a starter app pack for every lane: Chrome, Phone, Messages, Contacts, Calendar, Camera, Files, Settings, and Play Store. For those to be actual installed apps, create the AVD from a Google Play system image and complete the normal Android setup. PhoneOps provides the control plane; it does not redistribute Google apps or bypass Play Store licensing.
+
 The official Android command-line flow is `emulator @avd_name`, followed by ADB operations. Android documents `emulator -list-avds`, `-no-window` for headless operation, and host acceleration through KVM on Linux or WHPX on Windows. See the [Android Emulator command-line reference](https://developer.android.com/studio/run/emulator-commandline).
 
 ## Windows setup
