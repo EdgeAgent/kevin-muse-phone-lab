@@ -7,6 +7,7 @@ import argparse, json, os, subprocess, threading, time, uuid, sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
+from android_backend import AndroidBackend, AndroidBackendError
 
 ROOT = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 SOURCE_ROOT = Path(__file__).parent
@@ -35,6 +36,7 @@ def make_phone(index):
 phones = {p["id"]: p for p in [make_phone(i) for i in range(8)]}
 workers = {}
 remote_links = {}
+android = AndroidBackend()
 lock = threading.Lock()
 
 def public_state():
@@ -171,6 +173,7 @@ class Handler(BaseHTTPRequestHandler):
         if path=="/api/state": return self.send_json(200, public_state())
         if path=="/api/ollama/status": return self.send_json(200, ollama_status())
         if path=="/api/remote/status": return self.send_json(200, {"ok": True, "links": remote_status()})
+        if path=="/api/android/status": return self.send_json(200, {"ok": True, "android": android.status()})
         if path.startswith("/remote/"):
             token = path.split("/", 2)[2]
             with lock: link = remote_links.get(token)
@@ -212,7 +215,19 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json(200, {"ok": True, "phoneId": link["phoneId"]})
             if path == "/api/remote/status":
                 return self.send_json(200, {"ok": True, "links": remote_status()})
-        except (ValueError, KeyError, json.JSONDecodeError, URLError, HTTPError, TimeoutError, OSError) as exc: return self.send_json(400,{"ok":False,"error":str(exc)})
+            if path == "/api/android/launch":
+                return self.send_json(200, {"ok": True, "android": android.launch(str(payload.get("avd", "")), payload.get("port"), bool(payload.get("headless", False)))})
+            if path == "/api/android/stop":
+                return self.send_json(200, {"ok": True, "android": android.stop(str(payload.get("serial", "")))})
+            if path == "/api/android/install":
+                return self.send_json(200, {"ok": True, "android": android.install_apk(str(payload.get("serial", "")), str(payload.get("apk", "")))})
+            if path == "/api/android/shell":
+                return self.send_json(200, {"ok": True, "android": android.shell(str(payload.get("serial", "")), payload.get("args"))})
+            if path == "/api/android/screenshot":
+                serial = str(payload.get("serial", "")); safe = "".join(c for c in serial if c.isalnum() or c in "-_") or "device"
+                output = str((RUNTIME / "android-screens" / f"{safe}.png").resolve())
+                return self.send_json(200, {"ok": True, "android": android.screenshot(serial, output)})
+        except (ValueError, KeyError, json.JSONDecodeError, URLError, HTTPError, TimeoutError, OSError, AndroidBackendError) as exc: return self.send_json(400,{"ok":False,"error":str(exc)})
         self.send_json(404,{"error":"not found"})
 
 if __name__=="__main__":

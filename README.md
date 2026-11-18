@@ -20,17 +20,18 @@
 
 <p align="center"><a href="#high-value-use-cases-and-prompts">Use cases</a> · <a href="#quick-start-on-windows">Quick start</a> · <a href="REMOTE-LINK.md">Remote Phone Link</a> · <a href="LOCAL-TESTING.md">Testing</a></p>
 
-PhoneOps is a local operations console for running, observing, and coordinating multiple phone-oriented agent environments. It combines eight independently taskable worker processes, a local Ollama agent, parallel workflow dispatch, execution telemetry, and a secure pairing-link scaffold for future real-phone companions.
+PhoneOps is a local operations console for running, observing, and coordinating multiple phone-oriented agent environments. It combines eight independently taskable worker lanes, a local Ollama agent, parallel workflow dispatch, execution telemetry, and an optional real Android Emulator / ADB backend.
 
-PhoneOps is built for teams that need repeatable phone workflows without immediately handing sensitive operational data to a cloud agent. The current workers are lightweight virtual environments with private state directories, process IDs, task queues, and event histories. They are not full Android or iOS emulators, and they do not access real accounts or send real messages.
+PhoneOps is built for teams that need repeatable phone workflows without immediately handing sensitive operational data to a cloud agent. When Android SDK tools are unavailable, PhoneOps runs lightweight local workers as a safe fallback. When Android Studio Emulator and ADB are installed, the new backend can manage real Android Virtual Devices, install APKs, run scoped shell commands, and capture device screens. See [ANDROID-EMULATOR.md](ANDROID-EMULATOR.md).
 
-![PhoneOps dashboard](docs/screenshots/phoneops-dashboard.webp)
+![PhoneOps dashboard](https://private-us-east-1.manuscdn.com/sessionFile/ttK12SZFUVQjK3eSjXVUJ1/sandbox/GMfvEamBg2S2NHo3jw1HDW-images_1794142199686_na1fn_L2hvbWUvdWJ1bnR1L2tldmluLW11c2UtcGhvbmUtbGFiL2RvY3Mvc2NyZWVuc2hvdHMvcGhvbmVvcHMtZGFzaGJvYXJk.webp?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly9wcml2YXRlLXVzLWVhc3QtMS5tYW51c2Nkbi5jb20vc2Vzc2lvbkZpbGUvdHRLMTJTWkZVVlFqSzNlU2pYVlVKMS9zYW5kYm94L0dNZnZFYW1CZzJTMk5IbzNqdzFIRFctaW1hZ2VzXzE3OTQxNDIxOTk2ODZfbmExZm5fTDJodmJXVXZkV0oxYm5SMUwydGxkbWx1TFcxMWMyVXRjR2h2Ym1VdGJHRmlMMlJ2WTNNdmMyTnlaV1Z1YzJodmRITXZjR2h2Ym1WdmNITXRaR0Z6YUdKdllYSmsud2VicCIsIkNvbmRpdGlvbiI6eyJEYXRlTGVzc1RoYW4iOnsiQVdTOkVwb2NoVGltZSI6MTc5NjA4MzIwMH19fV19&Key-Pair-Id=K2QY5QTL8JSY6C&Signature=MEUCIQDlR~d00gT6h1IkP-VnhVYPeSE0bM00Vc7BHRu~CrAznwIgFpRJ9rXci6Q1zANqRO4OTrEkY91cW1mlsu~LqllUrBw_)
 
 ## Product snapshot
 
 | Capability | What it does |
 |---|---|
-| Eight worker lanes | Runs eight isolated local phone workers with independent state and PIDs |
+| Eight worker lanes | Runs eight isolated local worker lanes with independent state and PIDs |
+| Real Android mode | Discovers AVDs, launches emulators, installs APKs, and captures screens through ADB |
 | Local intelligence | Uses Ollama Desktop through `localhost:11434` |
 | Natural-language control | Lets an operator ask PhoneOps to select a phone and approved task |
 | Parallel operations | Dispatches one approved workflow to every ready phone simultaneously |
@@ -163,7 +164,7 @@ Future real-phone path:
 PhoneOps pairing link → signed phone companion → authenticated WebRTC/ADB bridge
 ```
 
-The server validates every model decision against known phone IDs and supported task presets. Parallel execution is bounded to the eight local workers. The Remote Phone Link currently provides a 15-minute pairing-token lifecycle and connection status; actual screen mirroring still requires a trusted Android or iPhone companion. See [REMOTE-LINK.md](REMOTE-LINK.md).
+The server validates every model decision against known phone IDs and supported task presets. Parallel execution is bounded to the eight local workers. Real Android mode is opt-in and reports Android as unavailable when the SDK is missing. The Remote Phone Link provides a 15-minute pairing-token lifecycle; live real-phone mirroring still requires a trusted companion. See [ANDROID-EMULATOR.md](ANDROID-EMULATOR.md) and [REMOTE-LINK.md](REMOTE-LINK.md).
 
 ## Quick start on Windows
 
@@ -181,7 +182,7 @@ Set-ExecutionPolicy -Scope Process Bypass
 .\run-kevin-windows.bat
 ```
 
-Open `http://localhost:8787`. Use **Ask PhoneOps** for natural-language control, **Run in parallel** for fleet dispatch, or **Remote Phone Link** for the pairing scaffold.
+Open `http://localhost:8787`. Use **Ask PhoneOps** for natural-language control, **Run in parallel** for fleet dispatch, **Real Android Mode** for AVD-backed devices, or **Remote Phone Link** for the pairing scaffold.
 
 ## Configure local models
 
@@ -207,15 +208,15 @@ Invoke-RestMethod http://localhost:8787/api/state | ConvertTo-Json -Depth 6
 Invoke-RestMethod http://localhost:8787/api/ollama/status | ConvertTo-Json
 ```
 
-The smoke test verifies eight worker processes, single-phone execution, eight-way parallel execution, and remote pairing-link creation. See [LOCAL-TESTING.md](LOCAL-TESTING.md) for logs, process inspection, state files, and parallel API calls.
+The smoke test verifies eight worker processes, single-phone execution, eight-way parallel execution, and remote pairing-link creation. See [LOCAL-TESTING.md](LOCAL-TESTING.md) for logs, process inspection, state files, and parallel API calls. See [ANDROID-EMULATOR.md](ANDROID-EMULATOR.md) for real-device setup.
 
 ## Current status and roadmap
 
-The current release is a local prototype with real worker processes, local model routing, parallel dispatch, observability, Windows build scripts, and a remote-link scaffold. The next production steps are authenticated companion registration, encrypted WebRTC screen transport, durable event storage, workflow templates, role-based approvals, and customer pilots that measure time saved and error reduction.
+The current release is a local prototype with real worker processes, local model routing, parallel dispatch, observability, Windows build scripts, a remote-link scaffold, and an Android Emulator / ADB adapter. The next production steps are AVD slot orchestration, boot readiness management, live screen streaming, durable event storage, workflow templates, role-based approvals, and customer pilots that measure time saved and error reduction.
 
 ## Safety boundary
 
-PhoneOps is designed for explicit, observable, local workflows. It does not send messages, access accounts, make purchases, publish content, or control real devices in the current prototype. Any real-phone bridge should require explicit user pairing, scoped permissions, encrypted transport, revocable credentials, and human approval for consequential actions.
+PhoneOps is designed for explicit, observable, local workflows. The lightweight fallback workers do not access accounts or control real devices. Real Android mode can install and control the AVDs that the operator explicitly selects, so it should be run with test accounts and test APKs. Any real-phone bridge should require explicit user pairing, scoped permissions, encrypted transport, revocable credentials, and human approval for consequential actions.
 
 ## License and attribution
 
