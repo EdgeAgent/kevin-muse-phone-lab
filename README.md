@@ -32,9 +32,9 @@ Every PhoneOps environment starts with a visible starter app pack: **Chrome, Pho
 
 For native Chrome and Play Store, Windows users can double-click [`Setup-PhoneOps-GooglePlay.bat`](Setup-PhoneOps-GooglePlay.bat). It installs the Google Play system image, creates `PhoneOps-01`, and launches the AVD after you explicitly accept Google's SDK licenses.
 
-![PhoneOps phone wall](docs/screenshots/phoneops-phone-wall-app-pack.webp)
+![PhoneOps phone wall](docs/screenshots/phoneops-phone-farm-tested.webp)
 
-*Eight named phone environments shown side by side with Chrome, Phone, Messages, Contacts, Calendar, Camera, Files, Settings, and Play Store in the starter app pack.*
+*Eight named phone environments shown side by side with Chrome, Phone, Messages, Contacts, Calendar, Camera, Files, Settings, and Play Store in the starter app pack, captured after the eight-lane parallel smoke test.*
 
 ## Product snapshot
 
