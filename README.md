@@ -30,6 +30,8 @@ PhoneOps is built for teams that need repeatable phone workflows without immedia
 
 Every PhoneOps environment starts with a visible starter app pack: **Chrome, Phone, Messages, Contacts, Calendar, Camera, Files, Settings, and Play Store**. In fallback mode these are the environment’s seeded app catalog. In real Android mode, use a Google Play AVD image for actual Play Store and Chrome availability; PhoneOps does not redistribute Google APKs or bypass app licensing.
 
+For native Chrome and Play Store, Windows users can double-click [`Setup-PhoneOps-GooglePlay.bat`](Setup-PhoneOps-GooglePlay.bat). It installs the Google Play system image, creates `PhoneOps-01`, and launches the AVD after you explicitly accept Google's SDK licenses.
+
 ![PhoneOps phone wall](docs/screenshots/phoneops-phone-wall-app-pack.webp)
 
 *Eight named phone environments shown side by side with Chrome, Phone, Messages, Contacts, Calendar, Camera, Files, Settings, and Play Store in the starter app pack.*

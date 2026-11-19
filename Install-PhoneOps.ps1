@@ -55,6 +55,15 @@ $link.IconLocation = (Join-Path $Root 'kevin-server.exe')
 $link.Description = 'PhoneOps — local phone agent operations by EDGE | AGENCY'
 $link.Save()
 
+$androidSetup = Join-Path $Root 'Setup-PhoneOps-GooglePlay.bat'
+if (Test-Path $androidSetup) {
+  $androidLink = $wsh.CreateShortcut((Join-Path $desktop 'PhoneOps — Setup Google Play.lnk'))
+  $androidLink.TargetPath = $androidSetup
+  $androidLink.WorkingDirectory = $Root
+  $androidLink.Description = 'Install and launch the PhoneOps Google Play Android Virtual Device'
+  $androidLink.Save()
+}
+
 New-Item -ItemType Directory -Force -Path (Join-Path $Root 'downloads') | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $Root 'logs') | Out-Null
 

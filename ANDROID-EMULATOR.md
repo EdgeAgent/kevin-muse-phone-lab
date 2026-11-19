@@ -30,6 +30,18 @@ adb version
 emulator -list-avds
 ```
 
+### One-click Google Play AVD setup
+
+From the PhoneOps folder, double-click [`Setup-PhoneOps-GooglePlay.bat`](Setup-PhoneOps-GooglePlay.bat). The script installs the Android Emulator, Platform-Tools, API 35, and the `google_apis_playstore;x86_64` image, then creates an AVD named `PhoneOps-01` and launches it.
+
+The script intentionally pauses at `sdkmanager --licenses`. Review and accept Google’s licenses yourself; this cannot be bypassed by PhoneOps. The first boot can take several minutes. After Android finishes booting, verify the native packages:
+
+```powershell
+adb shell pm list packages | Select-String "chrome|vending"
+```
+
+You should see `com.android.chrome` and `com.android.vending` on a Google Play image. Sign in to Play Store only with a test account if your workflow requires it.
+
 Create an AVD in Android Studio’s Device Manager. For a fleet, create names such as:
 
 ```text
