@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from urllib.request import Request, urlopen
 from urllib.error import URLError, HTTPError
 from android_backend import AndroidBackend, AndroidBackendError
+from browser_backend import BrowserBackend
 
 ROOT = Path(getattr(sys, "_MEIPASS", Path(__file__).parent))
 SOURCE_ROOT = Path(__file__).parent
@@ -48,11 +49,15 @@ phones = {p["id"]: p for p in [make_phone(i) for i in range(8)]}
 workers = {}
 remote_links = {}
 android = AndroidBackend()
+browser = BrowserBackend(RUNTIME)
 lock = threading.Lock()
 
 def public_state():
     with lock:
-        return {"fleet": "PhoneOps", "phones": list(phones.values()), "presets": {k: {"label": v[0], "description": v[1]} for k, v in TASK_PRESETS.items()}}
+        snapshot = list(phones.values())
+        for phone in snapshot:
+            phone["browser"] = browser.status(phone["id"])
+        return {"fleet": "PhoneOps", "phones": snapshot, "presets": {k: {"label": v[0], "description": v[1]} for k, v in TASK_PRESETS.items()}}
 
 def add_event(phone, event):
     phone["events"].insert(0, event); phone["events"] = phone["events"][:8]; phone["updated"] = now()
@@ -185,6 +190,7 @@ class Handler(BaseHTTPRequestHandler):
         if path=="/api/ollama/status": return self.send_json(200, ollama_status())
         if path=="/api/remote/status": return self.send_json(200, {"ok": True, "links": remote_status()})
         if path=="/api/android/status": return self.send_json(200, {"ok": True, "android": android.status()})
+        if path=="/api/browser/status": return self.send_json(200, {"ok": True, "browsers": browser.status()})
         if path.startswith("/remote/"):
             token = path.split("/", 2)[2]
             with lock: link = remote_links.get(token)
@@ -213,6 +219,22 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send_json(200, {"ok": True, "agent": agent_dispatch(instruction)})
             if path == "/api/parallel/dispatch":
                 return self.send_json(200, {"ok": True, "parallel": parallel_dispatch(payload)})
+            if len(parts)==5 and parts[:2]==["api","phones"] and parts[3]=="browser" and parts[4] in ("navigate", "search"):
+                phone_id = parts[2]
+                if phone_id not in phones: raise ValueError("Unknown phone")
+                if parts[4] == "navigate":
+                    result = browser.navigate(phone_id, payload.get("url"))
+                else:
+                    result = browser.search(phone_id, payload.get("query"), payload.get("engine", "duckduckgo"))
+                with lock:
+                    phones[phone_id]["app"] = "Chrome"
+                    phones[phone_id]["browser"] = result
+                    add_event(phones[phone_id], {"time": now(), "kind": "web", "text": f"Browser {parts[4]}: {result.get('title') or result.get('url')}"})
+                return self.send_json(200, {"ok": True, "phoneId": phone_id, "browser": result})
+            if len(parts)==5 and parts[:2]==["api","phones"] and parts[3]=="browser" and parts[4]=="screenshot":
+                phone_id = parts[2]
+                if phone_id not in phones: raise ValueError("Unknown phone")
+                return self.send_json(200, {"ok": True, "phoneId": phone_id, "browser": browser.screenshot(phone_id)})
             if path == "/api/remote/link":
                 return self.send_json(200, {"ok": True, "link": create_remote_link(str(payload.get("phone_id", "")))})
             if path == "/api/remote/connect":
@@ -248,3 +270,4 @@ if __name__=="__main__":
     try: ThreadingHTTPServer(("0.0.0.0",args.port),Handler).serve_forever()
     finally:
         for phone_id in list(workers): stop_worker(phone_id)
+        browser.close()

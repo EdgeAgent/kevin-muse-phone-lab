@@ -55,6 +55,15 @@ $link.IconLocation = (Join-Path $Root 'kevin-server.exe')
 $link.Description = 'PhoneOps — local phone agent operations by EDGE | AGENCY'
 $link.Save()
 
+$webSetup = Join-Path $Root 'Setup-PhoneOps-Web.bat'
+if (Test-Path $webSetup) {
+  $webLink = $wsh.CreateShortcut((Join-Path $desktop 'PhoneOps — Setup Web Browsers.lnk'))
+  $webLink.TargetPath = $webSetup
+  $webLink.WorkingDirectory = $Root
+  $webLink.Description = 'Install isolated per-phone web browser sessions for PhoneOps'
+  $webLink.Save()
+}
+
 $androidSetup = Join-Path $Root 'Setup-PhoneOps-GooglePlay.bat'
 if (Test-Path $androidSetup) {
   $androidLink = $wsh.CreateShortcut((Join-Path $desktop 'PhoneOps — Setup Google Play.lnk'))

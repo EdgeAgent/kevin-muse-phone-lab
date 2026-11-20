@@ -33,6 +33,8 @@ Every PhoneOps environment starts with a visible starter app pack: **Chrome, Pho
 
 For native Chrome and Play Store, Windows users can double-click [`Setup-PhoneOps-GooglePlay.bat`](Setup-PhoneOps-GooglePlay.bat). It installs the Google Play system image, creates `PhoneOps-01`, and launches the AVD after you explicitly accept Google's SDK licenses.
 
+For immediate web access in the local farm, double-click [`Setup-PhoneOps-Web.bat`](Setup-PhoneOps-Web.bat). Each phone lane then gets an isolated Chromium session with its own search, URL navigation, cookies, page title, and screenshot state. See [`BROWSER-OPERATIONS.md`](BROWSER-OPERATIONS.md) for parallel website checks.
+
 ![PhoneOps phone wall](docs/screenshots/phoneops-android-launcher-wall.webp)
 
 *Eight named phone environments shown side by side with Chrome, Phone, Messages, Contacts, Calendar, Camera, Files, Settings, and Play Store in the starter app pack, captured after the eight-lane parallel smoke test.*
@@ -45,6 +47,7 @@ For native Chrome and Play Store, Windows users can double-click [`Setup-PhoneOp
 | Real Android mode | Discovers AVDs, launches emulators, installs APKs, and captures screens through ADB |
 | Local intelligence | Uses Ollama Desktop through `localhost:11434` |
 | Natural-language control | Lets an operator ask PhoneOps to select a phone and approved task |
+| Per-phone browser sessions | Searches different websites and captures pages independently in all eight lanes |
 | Parallel operations | Dispatches one approved workflow to every ready phone simultaneously |
 | Observability | Shows worker state, task events, completion records, and local model status |
 | Remote Phone Link | Creates a short-lived pairing token for a future phone-side companion |
