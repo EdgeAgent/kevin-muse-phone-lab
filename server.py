@@ -191,6 +191,11 @@ class Handler(BaseHTTPRequestHandler):
         if path=="/api/remote/status": return self.send_json(200, {"ok": True, "links": remote_status()})
         if path=="/api/android/status": return self.send_json(200, {"ok": True, "android": android.status()})
         if path=="/api/browser/status": return self.send_json(200, {"ok": True, "browsers": browser.status()})
+        if path.startswith("/api/phones/") and path.endswith("/browser/image"):
+            phone_id = path.split("/")[3]
+            if phone_id not in phones: return self.send_json(404, {"ok": False, "error": "Unknown phone"})
+            raw = browser.image_bytes(phone_id)
+            self.send_response(200); self.send_header("Content-Type", "image/png"); self.send_header("Content-Length", str(len(raw))); self.send_header("Cache-Control", "no-store"); self.end_headers(); self.wfile.write(raw); return
         if path.startswith("/remote/"):
             token = path.split("/", 2)[2]
             with lock: link = remote_links.get(token)

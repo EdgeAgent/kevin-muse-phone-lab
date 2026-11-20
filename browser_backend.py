@@ -58,7 +58,9 @@ class BrowserBackend:
 
     def _record(self, phone_id, page, query=''):
         text = ' '.join((page.locator('body').inner_text(timeout=3000) or '').split())[:240]
-        meta = {"online": True, "url": page.url, "title": page.title()[:120], "query": query, "snippet": text}
+        image_path = self.screens / f'{phone_id}.png'
+        page.screenshot(path=str(image_path), full_page=False)
+        meta = {"online": True, "url": page.url, "title": page.title()[:120], "query": query, "snippet": text, "image": f'/api/phones/{phone_id}/browser/image'}
         self.meta[phone_id] = meta
         return meta
 
@@ -94,6 +96,12 @@ class BrowserBackend:
 
     def screenshot(self, phone_id):
         return self.executor.submit(self._screenshot, phone_id).result()
+
+    def image_bytes(self, phone_id):
+        path = self.screens / f'{phone_id}.png'
+        if not path.exists():
+            self.screenshot(phone_id)
+        return path.read_bytes()
 
     def status(self, phone_id=None):
         with self.lock:

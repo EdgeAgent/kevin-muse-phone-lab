@@ -26,7 +26,7 @@ Download or clone this repository and double-click [`Install-PhoneOps.bat`](Inst
 
 PhoneOps is a local operations console for running, observing, and coordinating multiple phone-oriented agent environments. Its dashboard presents eight named phone environments side by side — Phone One / Atlas through Phone Eight / Halo — with individual phone screens, worker state, app state, battery, PID, and task status. A direct command chat at the bottom lets an operator address a specific phone by number or name while a separate local agent can choose a phone automatically.
 Each phone card now shows an Android-style launcher grid with native-looking app tiles for Chrome, Phone, Messages, Contacts, Calendar, Camera, Files, Settings, and Play Store.
-The phone wall can also show a different live browser site on every lane; see [`phoneops-eight-browser-phones-closeup.webp`](docs/screenshots/phoneops-eight-browser-phones-closeup.webp).
+The phone wall can also show a different live browser site on every lane; see [`phoneops-eight-browser-phones-closeup.webp`](docs/screenshots/phoneops-eight-live-page-screens.webp).
 
 PhoneOps is built for teams that need repeatable phone workflows without immediately handing sensitive operational data to a cloud agent. When Android SDK tools are unavailable, PhoneOps runs lightweight local workers as a safe fallback. When Android Studio Emulator and ADB are installed, the new backend can manage real Android Virtual Devices, install APKs, run scoped shell commands, and capture device screens. See [ANDROID-EMULATOR.md](ANDROID-EMULATOR.md).
 
