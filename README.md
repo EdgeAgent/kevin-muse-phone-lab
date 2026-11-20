@@ -35,6 +35,8 @@ For native Chrome and Play Store, Windows users can double-click [`Setup-PhoneOp
 
 For immediate web access in the local farm, double-click [`Setup-PhoneOps-Web.bat`](Setup-PhoneOps-Web.bat). Each phone lane then gets an isolated Chromium session with its own search, URL navigation, cookies, page title, and screenshot state. See [`BROWSER-OPERATIONS.md`](BROWSER-OPERATIONS.md) for parallel website checks.
 
+The eight-browser performance audit is documented in [`BROWSER-BENCHMARK.md`](BROWSER-BENCHMARK.md), with raw results in [`browser-benchmark.json`](browser-benchmark.json) and a visual metrics image at [`phoneops-browser-benchmark.webp`](docs/screenshots/phoneops-browser-benchmark.webp).
+
 ![PhoneOps phone wall](docs/screenshots/phoneops-android-launcher-wall.webp)
 
 *Eight named phone environments shown side by side with Chrome, Phone, Messages, Contacts, Calendar, Camera, Files, Settings, and Play Store in the starter app pack, captured after the eight-lane parallel smoke test.*

@@ -1,0 +1,101 @@
+{
+  "timestamp": "2026-11-20T00:49:28+0000",
+  "lanes": 8,
+  "sites": [
+    "https://example.com",
+    "https://www.python.org/",
+    "https://www.wikipedia.org/",
+    "https://github.com/",
+    "https://docs.python.org/3/",
+    "https://developer.mozilla.org/",
+    "https://pypi.org/",
+    "https://www.ietf.org/"
+  ],
+  "elapsed_ms": 2687.9,
+  "before": {
+    "processes": 34,
+    "rss_mb": 2755.7,
+    "cpu_ticks": 140912,
+    "browser_processes": 25,
+    "browser_rss_mb": 2639.2,
+    "browser_cpu_ticks": 140868
+  },
+  "after": {
+    "processes": 34,
+    "rss_mb": 2860.5,
+    "cpu_ticks": 142020,
+    "browser_processes": 25,
+    "browser_rss_mb": 2743.8,
+    "browser_cpu_ticks": 141972
+  },
+  "peak": {
+    "t": 1795135768.6771188,
+    "processes": 34,
+    "rss_mb": 2851.4,
+    "cpu_ticks": 141899,
+    "browser_processes": 25,
+    "browser_rss_mb": 2734.8,
+    "browser_cpu_ticks": 141852
+  },
+  "min_lane_ms": 922.7,
+  "max_lane_ms": 2681.4,
+  "avg_lane_ms": 1943.9,
+  "results": [
+    {
+      "phone": "kevin-01",
+      "url": "https://example.com",
+      "elapsed_ms": 922.7,
+      "ok": true,
+      "title": "Example Domain"
+    },
+    {
+      "phone": "kevin-02",
+      "url": "https://www.python.org/",
+      "elapsed_ms": 2252.8,
+      "ok": true,
+      "title": "Welcome to Python.org"
+    },
+    {
+      "phone": "kevin-03",
+      "url": "https://www.wikipedia.org/",
+      "elapsed_ms": 2404.1,
+      "ok": true,
+      "title": "Wikipedia"
+    },
+    {
+      "phone": "kevin-04",
+      "url": "https://github.com/",
+      "elapsed_ms": 1279.5,
+      "ok": true,
+      "title": "GitHub \u00b7 Change is constant. GitHub keeps you ahead. \u00b7 GitHub \u00b7 GitHub"
+    },
+    {
+      "phone": "kevin-05",
+      "url": "https://docs.python.org/3/",
+      "elapsed_ms": 2681.4,
+      "ok": true,
+      "title": "Python 3.15.2 documentation"
+    },
+    {
+      "phone": "kevin-06",
+      "url": "https://developer.mozilla.org/",
+      "elapsed_ms": 1364.8,
+      "ok": true,
+      "title": "MDN Web Docs"
+    },
+    {
+      "phone": "kevin-07",
+      "url": "https://pypi.org/",
+      "elapsed_ms": 2533.7,
+      "ok": true,
+      "title": "PyPI \u00b7 The Python Package Index"
+    },
+    {
+      "phone": "kevin-08",
+      "url": "https://www.ietf.org/",
+      "elapsed_ms": 2112.0,
+      "ok": true,
+      "title": "IETF | Internet Engineering Task Force"
+    }
+  ]
+}
