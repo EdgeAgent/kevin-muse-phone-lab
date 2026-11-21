@@ -11,6 +11,8 @@ This repository includes a real recorded demo of the local eight-lane PhoneOps w
 
 The recording shows the running dashboard with eight named phone lanes, independent browser content, the Auto-scrape control, and the full-screen wall control. The phone display switches from the launcher to a normal in-phone browser view while active.
 
+The dashboard also includes an **AI Fleet Director**. It accepts one mission, creates a validated plan for up to eight lanes, and routes public-web research or safe health checks through Ollama when available. If Ollama is offline, deterministic local planning remains available. Fallback worker tasks create explicit JSON evidence artifacts and state that they are simulated rather than claiming native Android activity.
+
 ## Smoke-test result
 
 The recorded build was tested against the live local service:
@@ -22,6 +24,8 @@ PASS: eight-way parallel dispatch completed
 PASS: eight browser lanes returned different public pages
 PASS: eight full-screen in-phone browser shells rendered
 PASS: continuous scraper completed its first eight-lane cycle
+PASS: AI fleet director planned all eight lanes with offline fallback
+PASS: fleet lanes produced explicit simulator evidence artifacts
 PASS: JavaScript syntax validation
 PASS: Python compilation
 PASS: MP4 ffprobe validation: H.264, 1600x1000, 8.12 seconds

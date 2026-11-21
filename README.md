@@ -28,7 +28,7 @@
 
 Download or clone this repository and double-click [`Install-PhoneOps.bat`](Install-PhoneOps.bat). It checks prerequisites, optionally offers Android Studio installation, builds the local executables when needed, creates a **PhoneOps** desktop shortcut, and opens the dashboard. See [`ONE-CLICK-SETUP.md`](ONE-CLICK-SETUP.md) for the exact flow. Android SDK licenses are accepted explicitly by the user inside Android Studio; PhoneOps never bypasses that step.
 
-PhoneOps is a local operations console for running, observing, and coordinating multiple phone-oriented agent environments. Its dashboard presents eight named phone environments side by side — Phone One / Atlas through Phone Eight / Halo — with individual phone screens, worker state, app state, battery, PID, and task status. A direct command chat at the bottom lets an operator address a specific phone by number or name while a separate local agent can choose a phone automatically.
+PhoneOps is an AI-directed local phone farm: eight named phone lanes run side by side with independent state, worker processes, browser sessions, app catalogs, battery, PID, task status, and evidence. The **AI Fleet Director** can plan a safe multi-lane mission across all eight phones using Ollama when available, then fall back to deterministic local routing when Ollama is offline. A direct command chat still lets an operator address one named phone at a time.
 Each phone card now shows an Android-style launcher grid with native-looking app tiles for Chrome, Phone, Messages, Contacts, Calendar, Camera, Files, Settings, and Play Store.
 The phone wall can also show a different live browser site on every lane; see [`phoneops-eight-live-page-screens.webp`](docs/screenshots/phoneops-eight-live-page-screens.webp).
 When a lane is actively browsing, its webpage takes over the entire phone display with a browser toolbar and bottom navigation; the launcher apps disappear until the lane returns home. See the verified image [`phoneops-fullscreen-active-browsers.webp`](docs/screenshots/phoneops-fullscreen-active-browsers.webp). The wall can run these eight lanes continuously with the **Auto-scrape** control and expand using **Full-screen wall**; see [`CONTINUOUS-SCRAPE.md`](CONTINUOUS-SCRAPE.md).
@@ -59,17 +59,18 @@ The eight-browser performance audit is documented in [`BROWSER-BENCHMARK.md`](BR
 |---|---|
 | Eight worker lanes | Runs eight isolated local worker lanes with independent state and PIDs |
 | Real Android mode | Discovers AVDs, launches emulators, installs APKs, and captures screens through ADB |
-| Local intelligence | Uses Ollama Desktop through `localhost:11434` |
+| AI fleet director | Plans safe multi-lane missions through Ollama, with deterministic offline fallback |
+| Local intelligence | Uses Ollama Desktop through `localhost:11434` when available |
 | Natural-language control | Lets an operator ask PhoneOps to select a phone and approved task |
 | Per-phone browser sessions | Searches different websites and captures pages independently in all eight lanes |
-| Parallel operations | Dispatches one approved workflow to every ready phone simultaneously |
+| Parallel operations | Dispatches bounded multi-lane work and aggregates per-phone results |
 | Observability | Shows worker state, task events, completion records, and local model status |
 | Remote Phone Link | Creates a short-lived pairing token for a future phone-side companion |
 | Windows packaging | Builds `kevin-server.exe` and `kevin-phone-worker.exe` with PowerShell |
 
 ## Why teams would pay for this
 
-PhoneOps targets operational work where a human repeatedly opens apps, checks states, prepares drafts, captures evidence, or performs the same QA flow across several devices. The commercial value is not “more AI.” The value is a local, auditable control plane that reduces repetitive operator time, makes parallel execution visible, and preserves a clear approval boundary before actions reach a real device.
+PhoneOps targets operational work where a human repeatedly opens apps, checks states, prepares drafts, captures evidence, or performs the same QA flow across several devices. The commercial value is not “more AI.” The value is a local, auditable phone-farm control plane that reduces repetitive operator time, makes parallel execution visible, and preserves a clear approval boundary before actions reach a real device.
 
 Potential commercial packaging could include a private operations console for agencies, a local deployment package for regulated teams, a managed workflow library for customer-support operations, and a phone QA command center for product teams. Revenue should be validated with customer interviews and pilots rather than assumed from the prototype alone.
 
@@ -192,7 +193,7 @@ Future real-phone path:
 PhoneOps pairing link → signed phone companion → authenticated WebRTC/ADB bridge
 ```
 
-The server validates every model decision against known phone IDs and supported task presets. Parallel execution is bounded to the eight local workers. Real Android mode is opt-in and reports Android as unavailable when the SDK is missing. The Remote Phone Link provides a 15-minute pairing-token lifecycle; live real-phone mirroring still requires a trusted companion. See [ANDROID-EMULATOR.md](ANDROID-EMULATOR.md) and [REMOTE-LINK.md](REMOTE-LINK.md).
+The server validates every model decision against known phone IDs and supported task presets. The AI Fleet Director returns a bounded plan and executes only validated task or public-web assignments. Browser-fallback lanes produce live page screenshots; fallback worker tasks produce explicit JSON simulator evidence and never claim to have accessed a real account. Native Android mode is opt-in and reports Android as unavailable when the SDK is missing. The default server bind is localhost; use `--host` or `PHONEOPS_HOST` only for a controlled LAN deployment. The Remote Phone Link provides a 15-minute pairing-token scaffold; live real-phone mirroring still requires a trusted companion. See [ANDROID-EMULATOR.md](ANDROID-EMULATOR.md) and [REMOTE-LINK.md](REMOTE-LINK.md).
 
 ## Quick start on Windows
 
@@ -210,7 +211,7 @@ Set-ExecutionPolicy -Scope Process Bypass
 .\run-kevin-windows.bat
 ```
 
-Open `http://localhost:8787`. Use **Ask PhoneOps** for natural-language control, **Run in parallel** for fleet dispatch, **Real Android Mode** for AVD-backed devices, or **Remote Phone Link** for the pairing scaffold.
+Open `http://localhost:8787`. Use **Run AI fleet mission** for multi-lane planning, **Ask PhoneOps** for one named phone, **Auto-scrape** for recurring public-web evidence, **Full-screen wall** for the phone-farm view, or **Real Android Mode** for AVD-backed devices.
 
 ## Configure local models
 
@@ -240,7 +241,7 @@ The smoke test verifies eight worker processes, single-phone execution, eight-wa
 
 ## Current status and roadmap
 
-The current release is a local prototype with real worker processes, local model routing, parallel dispatch, observability, Windows build scripts, a remote-link scaffold, and an Android Emulator / ADB adapter. The next production steps are AVD slot orchestration, boot readiness management, live screen streaming, durable event storage, workflow templates, role-based approvals, and customer pilots that measure time saved and error reduction.
+The current release is a local AI phone-farm prototype with eight worker lanes, isolated browser evidence, multi-lane AI planning, deterministic offline fallback, continuous public-web scraping, observability, Windows build scripts, a remote-link scaffold, and an Android Emulator / ADB adapter. Native Android is not automatically mapped into all eight lanes yet; the next production steps are AVD slot orchestration, boot readiness management, live screen streaming, durable event storage, authenticated LAN access, workflow templates, role-based approvals, and customer pilots that measure time saved and error reduction.
 
 ## Safety boundary
 

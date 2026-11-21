@@ -48,7 +48,7 @@ def now(): return time.strftime("%H:%M:%S")
 def make_phone(index):
     return {"id": f"kevin-{index+1:02d}", "name": PHONE_NAMES[index], "slot": index + 1,
             "status": "ready", "power": "on", "battery": 92 - index * 4, "signal": 4 - (index % 2),
-            "network": "Wi-Fi 6", "app": "Chrome", "apps": [dict(app, installed=True, source="starter-pack") for app in DEFAULT_APPS], "lastTask": "No task dispatched", "updated": now(),
+            "network": "Wi-Fi 6", "app": "Chrome", "runtime": "browser-fallback", "apps": [dict(app, installed=True, source="starter-pack") for app in DEFAULT_APPS], "lastTask": "No task dispatched", "updated": now(),
             "workerPid": None, "stateDir": str(RUNTIME / f"kevin-{index+1:02d}"),
             "events": [{"time": now(), "kind": "system", "text": "Virtual device waiting to spawn"}]}
 
@@ -81,7 +81,8 @@ def worker_reader(phone_id, proc):
                 add_event(phone, {"time": now(), "kind": "dispatch", "text": f"{event['label']} dispatched", "taskId": event["taskId"], "command": event["command"]})
             elif event["type"] == "completed":
                 phone["status"] = "ready"; phone["app"] = event.get("app", phone["app"])
-                add_event(phone, {"time": now(), "kind": "success", "text": f"{event['label']} completed", "taskId": event["taskId"], "command": event["command"]})
+                phone["lastEvidence"] = event.get("artifact")
+                add_event(phone, {"time": now(), "kind": "success", "text": f"{event['label']} completed in fallback simulator", "taskId": event["taskId"], "command": event["command"], "artifact": event.get("artifact")})
     with lock:
         phone = phones.get(phone_id)
         if phone:
@@ -172,6 +173,52 @@ def parallel_dispatch(payload):
             except Exception as exc: results.append({"ok": False, "phoneId": phone_id, "error": str(exc)})
     return {"requested": len(phone_ids), "dispatched": sum(1 for r in results if r["ok"]), "results": sorted(results, key=lambda r: r.get("phoneId", ""))}
 
+def fleet_agent_dispatch(instruction):
+    """Plan a safe multi-lane mission, with a deterministic fallback when Ollama is offline."""
+    text = str(instruction or "").strip()
+    if not text: raise ValueError("instruction is required")
+    ids = list(phones.keys())
+    assignments = []
+    model = "deterministic-fallback"
+    wants_web = any(word in text.lower() for word in ("scrape", "research", "browse", "website", "web"))
+    if wants_web:
+        assignments = [{"phone_id": phone_id, "action": "navigate", "url": SCRAPE_SITES[i % len(SCRAPE_SITES)]} for i, phone_id in enumerate(ids)]
+    else:
+        assignments = [{"phone_id": phone_id, "action": "task", "preset": "health-scan"} for phone_id in ids]
+    try:
+        if ollama_status().get("connected"):
+            schema = {"type":"object","properties":{"assignments":{"type":"array","items":{"type":"object","properties":{"phone_id":{"type":"string"},"action":{"type":"string","enum":["task","navigate"]},"preset":{"type":"string"},"url":{"type":"string"}},"required":["phone_id","action"]}}},"required":["assignments"]}
+            prompt = ("You are the PhoneOps fleet director. Create a safe plan for all eight local lanes. "
+                      "Use action task with preset health-scan for operational checks, or action navigate with a public HTTPS URL for web research. "
+                      "Never use unknown phone IDs, private URLs, logins, purchases, messages, or destructive actions. Return JSON only.\n\n" + text)
+            result = ollama_request("/api/chat", {"model": OLLAMA_MODEL, "stream": False, "format": schema,
+                "messages": [{"role":"system","content":"Plan observable, reversible local fleet work only."},{"role":"user","content":prompt}]}, timeout=20)
+            candidate = json.loads(result.get("message", {}).get("content", "{}"))
+            valid = []
+            for item in candidate.get("assignments", []):
+                if item.get("phone_id") not in phones or item.get("phone_id") in {x.get("phone_id") for x in valid}: continue
+                if item.get("action") == "task" and item.get("preset") in TASK_PRESETS: valid.append(item)
+                elif item.get("action") == "navigate" and item.get("url"): valid.append(item)
+            if valid: assignments, model = valid[:8], OLLAMA_MODEL
+    except (ValueError, KeyError, json.JSONDecodeError, URLError, HTTPError, TimeoutError, OSError):
+        pass
+    def run(item):
+        phone_id = item["phone_id"]
+        if item["action"] == "navigate":
+            result = browser.navigate(phone_id, item["url"])
+            with lock:
+                phones[phone_id]["app"] = "Chrome"; phones[phone_id]["runtime"] = "browser-fallback"; phones[phone_id]["browser"] = result
+                add_event(phones[phone_id], {"time": now(), "kind": "web", "text": f"Fleet research captured {result.get('title') or result.get('url')}", "artifact": result.get("image")})
+            return {"ok": True, "phoneId": phone_id, "action": "navigate", "url": result.get("url"), "artifact": result.get("image")}
+        return {"ok": True, "dispatch": dispatch(phone_id, {"preset": item["preset"]})}
+    with ThreadPoolExecutor(max_workers=min(8, len(assignments))) as pool:
+        futures = [pool.submit(run, item) for item in assignments]
+        results = []
+        for future in futures:
+            try: results.append(future.result())
+            except Exception as exc: results.append({"ok": False, "error": str(exc)})
+    return {"instruction": text, "model": model, "planned": len(assignments), "completed": sum(1 for r in results if r.get("ok")), "results": results}
+
 def scrape_cycle():
     for index, phone_id in enumerate(list(phones)):
         if SCRAPE_STOP.is_set() or not SCRAPE_ENABLED: return
@@ -250,6 +297,8 @@ class Handler(BaseHTTPRequestHandler):
                 instruction = str(payload.get("instruction", "")).strip()
                 if not instruction: raise ValueError("instruction is required")
                 return self.send_json(200, {"ok": True, "agent": agent_dispatch(instruction)})
+            if path == "/api/agent/fleet":
+                return self.send_json(200, {"ok": True, "fleet": fleet_agent_dispatch(str(payload.get("instruction", "")))})
             if path == "/api/parallel/dispatch":
                 return self.send_json(200, {"ok": True, "parallel": parallel_dispatch(payload)})
             if len(parts)==5 and parts[:2]==["api","phones"] and parts[3]=="browser" and parts[4] in ("navigate", "search"):
@@ -303,11 +352,11 @@ class Handler(BaseHTTPRequestHandler):
         self.send_json(404,{"error":"not found"})
 
 if __name__=="__main__":
-    parser=argparse.ArgumentParser(); parser.add_argument("--port",type=int,default=8787); args=parser.parse_args(); RUNTIME.mkdir(exist_ok=True)
+    parser=argparse.ArgumentParser(); parser.add_argument("--port",type=int,default=8787); parser.add_argument("--host",default=os.environ.get("PHONEOPS_HOST", "127.0.0.1")); args=parser.parse_args(); RUNTIME.mkdir(exist_ok=True)
     for phone_id in phones: spawn_worker(phone_id)
     threading.Thread(target=scrape_loop, daemon=True, name="phoneops-auto-scrape").start()
-    print(f"Kevin Muse Phone Lab listening on http://0.0.0.0:{args.port} with {len(phones)} worker processes")
-    try: ThreadingHTTPServer(("0.0.0.0",args.port),Handler).serve_forever()
+    print(f"PhoneOps listening on http://{args.host}:{args.port} with {len(phones)} worker processes")
+    try: ThreadingHTTPServer((args.host,args.port),Handler).serve_forever()
     finally:
         for phone_id in list(workers): stop_worker(phone_id)
         SCRAPE_STOP.set()

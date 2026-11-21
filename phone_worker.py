@@ -13,5 +13,8 @@ for line in sys.stdin:
     time.sleep(float(task.get('delay',3)))
     app={'check-inbox':'Messages','capture-screen':'Gallery','health-scan':'Diagnostics','open-calendar':'Calendar','draft-reply':'Messages'}.get(task.get('key'),'Home')
     result_file=os.path.join(args.state_dir,'last-result.json')
-    with open(result_file,'w') as f: json.dump({'taskId':task['taskId'],'command':task['command'],'completedAt':time.time()},f,indent=2)
-    print(json.dumps({'type':'completed','app':app,**task}),flush=True)
+    artifact_file=os.path.join(args.state_dir,f"evidence-{task['taskId']}.json")
+    evidence={'taskId':task['taskId'],'phoneId':args.phone_id,'mode':'fallback-simulator','label':task['label'],'command':task['command'],'app':app,'completedAt':time.time(),'note':'Deterministic local simulation; no real account or device was accessed.'}
+    with open(result_file,'w') as f: json.dump(evidence,f,indent=2)
+    with open(artifact_file,'w') as f: json.dump(evidence,f,indent=2)
+    print(json.dumps({'type':'completed','app':app,'artifact':artifact_file,**task}),flush=True)
