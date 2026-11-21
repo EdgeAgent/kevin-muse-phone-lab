@@ -19,6 +19,10 @@
 </p>
 
 <p align="center"><a href="#high-value-use-cases-and-prompts">Use cases</a> · <a href="#quick-start-on-windows">Quick start</a> · <a href="REMOTE-LINK.md">Remote Phone Link</a> · <a href="LOCAL-TESTING.md">Testing</a></p>
+<p align="center"><a href="DEMO.md">Recorded demo</a> · <a href="docs/demo/phoneops-eight-lane-demo.mp4">MP4</a> · <a href="CONTINUOUS-SCRAPE.md">Continuous scrape</a> · <a href="ANDROID-EMULATOR.md">Native Android mode</a></p>
+
+![PhoneOps workflow map](docs/brand/workflow-map.svg)
+
 
 ## Easiest Windows setup
 
