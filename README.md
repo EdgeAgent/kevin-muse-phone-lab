@@ -33,6 +33,12 @@ Each phone card now shows an Android-style launcher grid with native-looking app
 The phone wall can also show a different live browser site on every lane; see [`phoneops-eight-live-page-screens.webp`](docs/screenshots/phoneops-eight-live-page-screens.webp).
 When a lane is actively browsing, its webpage takes over the entire phone display with a browser toolbar and bottom navigation; the launcher apps disappear until the lane returns home. See the verified image [`phoneops-fullscreen-active-browsers.webp`](docs/screenshots/phoneops-fullscreen-active-browsers.webp). The wall can run these eight lanes continuously with the **Auto-scrape** control and expand using **Full-screen wall**; see [`CONTINUOUS-SCRAPE.md`](CONTINUOUS-SCRAPE.md).
 
+## Watch PhoneOps in action
+
+[![Watch the eight-lane PhoneOps demo](docs/screenshots/phoneops-fullscreen-active-browsers.webp)](docs/demo/phoneops-eight-lane-demo.mp4)
+
+Click the image above to open the recorded eight-lane demo. It shows eight independent phone environments browsing different public pages, switching into full-screen in-phone browser mode, and running as a coordinated local wall. Download the [MP4 recording](docs/demo/phoneops-eight-lane-demo.mp4) or the [WebM recording](docs/demo/phoneops-eight-lane-demo.webm).
+
 PhoneOps is built for teams that need repeatable phone workflows without immediately handing sensitive operational data to a cloud agent. When Android SDK tools are unavailable, PhoneOps runs lightweight local workers as a safe fallback. When Android Studio Emulator and ADB are installed, the new backend can manage real Android Virtual Devices, install APKs, run scoped shell commands, and capture device screens. See [ANDROID-EMULATOR.md](ANDROID-EMULATOR.md).
 
 Every PhoneOps environment starts with a visible starter app pack: **Chrome, Phone, Messages, Contacts, Calendar, Camera, Files, Settings, and Play Store**. In fallback mode these are the environment’s seeded app catalog. In real Android mode, use a Google Play AVD image for actual Play Store and Chrome availability; PhoneOps does not redistribute Google APKs or bypass app licensing.
