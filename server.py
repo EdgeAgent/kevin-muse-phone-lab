@@ -35,6 +35,13 @@ TASK_PRESETS = {
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
 REMOTE_PUBLIC_URL = os.environ.get("REMOTE_PUBLIC_URL", "http://localhost:8787")
+SCRAPE_INTERVAL = max(30, int(os.environ.get("PHONEOPS_SCRAPE_INTERVAL", "60")))
+SCRAPE_SITES = [
+    "https://example.com", "https://www.python.org/", "https://www.wikipedia.org/", "https://github.com/",
+    "https://docs.python.org/3/", "https://developer.mozilla.org/", "https://pypi.org/", "https://www.ietf.org/",
+]
+SCRAPE_ENABLED = os.environ.get("PHONEOPS_AUTO_SCRAPE", "1").lower() not in {"0", "false", "off"}
+SCRAPE_STOP = threading.Event()
 
 def now(): return time.strftime("%H:%M:%S")
 
@@ -57,7 +64,7 @@ def public_state():
         snapshot = list(phones.values())
         for phone in snapshot:
             phone["browser"] = browser.status(phone["id"])
-        return {"fleet": "PhoneOps", "phones": snapshot, "presets": {k: {"label": v[0], "description": v[1]} for k, v in TASK_PRESETS.items()}}
+        return {"fleet": "PhoneOps", "phones": snapshot, "presets": {k: {"label": v[0], "description": v[1]} for k, v in TASK_PRESETS.items()}, "scrape": {"enabled": SCRAPE_ENABLED, "intervalSeconds": SCRAPE_INTERVAL, "sites": SCRAPE_SITES}}
 
 def add_event(phone, event):
     phone["events"].insert(0, event); phone["events"] = phone["events"][:8]; phone["updated"] = now()
@@ -165,6 +172,25 @@ def parallel_dispatch(payload):
             except Exception as exc: results.append({"ok": False, "phoneId": phone_id, "error": str(exc)})
     return {"requested": len(phone_ids), "dispatched": sum(1 for r in results if r["ok"]), "results": sorted(results, key=lambda r: r.get("phoneId", ""))}
 
+def scrape_cycle():
+    for index, phone_id in enumerate(list(phones)):
+        if SCRAPE_STOP.is_set() or not SCRAPE_ENABLED: return
+        try:
+            result = browser.navigate(phone_id, SCRAPE_SITES[index % len(SCRAPE_SITES)])
+            with lock:
+                phones[phone_id]["app"] = "Chrome"
+                phones[phone_id]["browser"] = result
+                add_event(phones[phone_id], {"time": now(), "kind": "web", "text": f"Auto-scraped {result.get('title') or result.get('url')}"})
+        except Exception as exc:
+            with lock:
+                add_event(phones[phone_id], {"time": now(), "kind": "error", "text": f"Auto-scrape failed: {str(exc)[:100]}"})
+
+def scrape_loop():
+    while not SCRAPE_STOP.is_set():
+        if SCRAPE_ENABLED:
+            scrape_cycle()
+        SCRAPE_STOP.wait(SCRAPE_INTERVAL)
+
 def create_remote_link(phone_id):
     with lock:
         if phone_id not in phones: raise ValueError("Unknown phone")
@@ -191,6 +217,7 @@ class Handler(BaseHTTPRequestHandler):
         if path=="/api/remote/status": return self.send_json(200, {"ok": True, "links": remote_status()})
         if path=="/api/android/status": return self.send_json(200, {"ok": True, "android": android.status()})
         if path=="/api/browser/status": return self.send_json(200, {"ok": True, "browsers": browser.status()})
+        if path=="/api/scrape/status": return self.send_json(200, {"ok": True, "enabled": SCRAPE_ENABLED, "intervalSeconds": SCRAPE_INTERVAL, "sites": SCRAPE_SITES})
         if path.startswith("/api/phones/") and path.endswith("/browser/image"):
             phone_id = path.split("/")[3]
             if phone_id not in phones: return self.send_json(404, {"ok": False, "error": "Unknown phone"})
@@ -207,6 +234,7 @@ class Handler(BaseHTTPRequestHandler):
             data=target.read_bytes(); typ="text/html" if target.suffix==".html" else "text/css" if target.suffix==".css" else "application/javascript"; self.send_response(200); self.send_header("Content-Type",typ); self.send_header("Content-Length",str(len(data))); self.end_headers(); self.wfile.write(data); return
         self.send_json(404,{"error":"not found"})
     def do_POST(self):
+        global SCRAPE_ENABLED
         path=urlparse(self.path).path; parts=path.strip("/").split("/")
         try:
             length=int(self.headers.get("Content-Length",0)); payload=json.loads(self.rfile.read(length) or b"{}")
@@ -240,6 +268,12 @@ class Handler(BaseHTTPRequestHandler):
                 phone_id = parts[2]
                 if phone_id not in phones: raise ValueError("Unknown phone")
                 return self.send_json(200, {"ok": True, "phoneId": phone_id, "browser": browser.screenshot(phone_id)})
+            if path == "/api/scrape/start":
+                SCRAPE_ENABLED = True
+                return self.send_json(200, {"ok": True, "enabled": True, "intervalSeconds": SCRAPE_INTERVAL})
+            if path == "/api/scrape/stop":
+                SCRAPE_ENABLED = False
+                return self.send_json(200, {"ok": True, "enabled": False})
             if path == "/api/remote/link":
                 return self.send_json(200, {"ok": True, "link": create_remote_link(str(payload.get("phone_id", "")))})
             if path == "/api/remote/connect":
@@ -271,8 +305,10 @@ class Handler(BaseHTTPRequestHandler):
 if __name__=="__main__":
     parser=argparse.ArgumentParser(); parser.add_argument("--port",type=int,default=8787); args=parser.parse_args(); RUNTIME.mkdir(exist_ok=True)
     for phone_id in phones: spawn_worker(phone_id)
+    threading.Thread(target=scrape_loop, daemon=True, name="phoneops-auto-scrape").start()
     print(f"Kevin Muse Phone Lab listening on http://0.0.0.0:{args.port} with {len(phones)} worker processes")
     try: ThreadingHTTPServer(("0.0.0.0",args.port),Handler).serve_forever()
     finally:
         for phone_id in list(workers): stop_worker(phone_id)
+        SCRAPE_STOP.set()
         browser.close()
